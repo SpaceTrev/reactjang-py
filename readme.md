@@ -286,39 +286,49 @@ export default App;
 3. ##### Let’s create a file names User.js in app/src/ and paste the codes below in it. Here we use polling to refetch the result every 0.5 second.
 
 ```
-import React from 'react';
-import { useQuery } from 'react-apollo';
-import { gql } from 'apollo-boost';
+import React from "react";
+import { useQuery } from "react-apollo";
+import { gql } from "apollo-boost";
 const QUERY_USERS = gql`
   query {
-    users {
+    allUsers {
       id
       name
-      lastName
+      email
+      password
     }
-}
+  }
 `;
 export function UserInfo() {
   // Polling: provides near-real-time synchronization with
   // your server by causing a query to execute periodically
   // at a specified interval
-  const { data, loading } = useQuery(
-    QUERY_USERS, {
-      pollInterval: 500 // refetch the result every 0.5 second
-    }
-  );
+  const { data, loading } = useQuery(QUERY_USERS, {
+    pollInterval: 500, // refetch the result every 0.5 second
+  });
 
   // should handle loading status
   if (loading) return <p>Loading...</p>;
 
-  return data.users.map(({ id, name, lastName }) => (
-    <div key={id}>
-      <p>
-        User - {id}: {name} {lastName}
+  return data.allUsers.map(({ id, name, email, password }) => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      key={id}
+    >
+      <p style={{ margin: "10px 10px" }}>
+        User - {id}: {name}
       </p>
+      <p style={{ margin: "10px 10px" }}>Email - {email}</p>
+      <p style={{ margin: "10px 10px" }}>password - {password}</p>
     </div>
   ));
 }
+
 ```
 
 4. ##### Modify backend to accept the cross-site requests of React App
@@ -361,3 +371,111 @@ urlpatterns = [
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
 ```
+
+6. ##### Use useMutation to update data
+
+```
+import React from "react";
+import { gql } from "apollo-boost";
+import { useMutation } from "react-apollo";
+
+const CREATE_USER = gql`
+  mutation createUser($email: String!, $name: String!, $password: String!) {
+    createUser(email: $email, name: $name, password: $password) {
+      user {
+        name
+      }
+    }
+  }
+`;
+export function CreateUser() {
+  let inputName, inputEmail, inputPassword;
+  const [createUser, { data }] = useMutation(CREATE_USER);
+  return (
+    <div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          createUser({
+            variables: {
+              email: inputEmail.value,
+              name: inputName.value,
+              password: inputPassword.value,
+            },
+          });
+          inputName.value = "";
+          inputEmail.value = "";
+          inputPassword.value = "";
+        }}
+        style={{ marginTop: "2em", marginBottom: "2em" }}
+      >
+        <label>Name: </label>
+        <input
+          ref={(node) => {
+            inputName = node;
+          }}
+          style={{ marginRight: "1em" }}
+        />
+        <label>Email: </label>
+        <input
+          ref={(node) => {
+            inputEmail = node;
+          }}
+          style={{ marginRight: "1em" }}
+        />
+
+        <label>Password: </label>
+        <input
+          ref={(node) => {
+            inputPassword = node;
+          }}
+          style={{ marginRight: "1em" }}
+        />
+
+        <button type="submit" style={{ cursor: "pointer" }}>
+          Add a User
+        </button>
+      </form>
+    </div>
+  );
+}
+
+```
+
+7. ##### Update App.js to import new files
+
+```
+import React from "react";
+import ApolloClient from "apollo-boost";
+import { ApolloProvider } from "@apollo/react-hooks";
+import { UserInfo } from "./User";
+import { CreateUser } from "./CreateUser";
+
+const client = new ApolloClient({
+  uri: "http://localhost:8000/graphql/", // your GraphQL Server
+});
+
+const App = () => (
+  <ApolloProvider client={client}>
+    <div
+      style={{
+        backgroundColor: "#00000008",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        flexDirection: "column",
+      }}
+    >
+      <h2>Trev&apos;s React Apollo Django App 🚀</h2>
+      <CreateUser />
+      <UserInfo />
+    </div>
+  </ApolloProvider>
+);
+
+export default App;
+
+```
+
+8. ##### Open app to http://localhost:3000/ and add users
