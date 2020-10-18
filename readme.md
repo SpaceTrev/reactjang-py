@@ -324,7 +324,7 @@ export function UserInfo() {
 4. ##### Modify backend to accept the cross-site requests of React App
 
 ```
-🚀  pip install django-cors-headers
+🚀  pip3 install django-cors-headers
 ```
 
 - ###### Modify react-jang/react_jang/settings.py:
