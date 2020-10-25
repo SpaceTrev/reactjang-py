@@ -479,3 +479,36 @@ export default App;
 ```
 
 8. ##### Open app to http://localhost:3000/ and add users
+
+## Starting up again
+
+##### Start docker, then
+
+```
+🚀  docker-compose up d
+🚀  docker exec -it reactjang_postgres1 psql -U postgres
+```
+
+##### Then
+
+```
+postgres=# create database reactjang;
+postgres=# create user reactjanguser with password 'mypassword';
+postgres=# grant all privileges on database reactjang to reactjanguser;
+postgres=# \q
+```
+
+##### And Then in python/react-jang
+
+```
+🚀  source venv/bin/activate
+🚀  ./manage.py migrate
+🚀  ./manage.py runserver
+```
+
+##### And Then
+
+```
+🚀  cd ../client
+🚀  npm start
+```
